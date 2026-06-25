@@ -1,0 +1,7 @@
+Ruta Gastronomica del Lago;gastronomico;45000;8;Marcela Hidalgo;gastronomico
+Paseo Lacustre Llanquihue;lacustre;32000;12;Pedro Vidal;lacustre
+Excursion Cultural Frutillar;cultural;28000;6;Ana Schuler;cultural
+Tour Volcan Osorno;aventura;67000;4;Ricardo Soto;aventura
+Ruta de los Jardines;cultural;19000;15;Ana Schuler;cultural
+Navegacion Golfo de Ancud;lacustre;54000;3;Pedro Vidal;lacustre
+Tour Gastronomico Puerto Montt;gastronomico;38000;10;Marcela Hidalgo;gastronomico
