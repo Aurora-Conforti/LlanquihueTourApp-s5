@@ -1,11 +1,8 @@
 package util;
 
 /**
- * Clase utilitaria con metodos estaticos de validacion reutilizables
- * para distintas partes del sistema de Llanquihue Tour.
- *
- * Centraliza las validaciones basicas para evitar duplicar logica
- * en las clases de modelo y de servicio.
+ * Clase utilitaria que centraliza los metodos de validacion
+ * reutilizables en todo el sistema (texto, numeros, formato de lineas).
  *
  * @author Aurora Conforti
  * @version 1.0
@@ -13,50 +10,48 @@ package util;
 public class ValidadorDatos {
 
     /**
-     * Valida que un texto no sea nulo ni este vacio.
+     * Valida que un texto no sea nulo ni este vacio (trim).
      *
-     * @param texto Texto a validar.
-     * @return true si el texto es valido (no nulo y no vacio).
+     * @param texto Cadena a validar.
+     * @return true si el texto es valido, false en caso contrario.
      */
     public static boolean esTextoValido(String texto) {
         return texto != null && !texto.trim().isEmpty();
     }
 
     /**
+     * Valida que un numero sea positivo (mayor a cero).
+     *
+     * @param numero Valor a validar.
+     * @return true si el numero es positivo, false en caso contrario.
+     */
+    public static boolean esNumeroPositivo(double numero) {
+        return numero > 0;
+    }
+
+    /**
      * Valida que un numero entero sea positivo.
      *
-     * @param numero Numero a validar.
-     * @return true si el numero es mayor o igual a cero.
+     * @param numero Valor a validar.
+     * @return true si el numero es positivo, false en caso contrario.
      */
-    public static boolean esNumeroPositivo(int numero) {
-        return numero >= 0;
+    public static boolean esEnteroPositivo(int numero) {
+        return numero > 0;
     }
 
     /**
-     * Intenta convertir un texto a numero entero de forma segura,
-     * capturando el error si el formato no es valido.
+     * Valida que una linea leida del archivo tenga la cantidad
+     * esperada de campos separados por punto y coma.
      *
-     * @param texto Texto que representa un numero.
-     * @return el numero entero si la conversion fue exitosa, o -1 si hubo error.
+     * @param linea              Linea leida del archivo.
+     * @param cantidadEsperada   Cantidad de campos esperados.
+     * @return true si la linea tiene el formato correcto.
      */
-    public static int convertirAEnteroSeguro(String texto) {
-        try {
-            return Integer.parseInt(texto.trim());
-        } catch (NumberFormatException e) {
-            System.out.println("Error de formato: '" + texto + "' no es un numero valido.");
-            return -1;
+    public static boolean formatoLineaCorrecto(String linea, int cantidadEsperada) {
+        if (!esTextoValido(linea)) {
+            return false;
         }
-    }
-
-    /**
-     * Valida que una linea leida desde un archivo tenga la cantidad de
-     * campos esperada antes de procesarla.
-     *
-     * @param partes        Arreglo de campos obtenidos al separar la linea.
-     * @param cantidadEsperada Cantidad de campos que la linea deberia tener.
-     * @return true si la cantidad de campos coincide con lo esperado.
-     */
-    public static boolean tieneCantidadDeCamposValida(String[] partes, int cantidadEsperada) {
-        return partes != null && partes.length == cantidadEsperada;
+        String[] partes = linea.split(";");
+        return partes.length == cantidadEsperada;
     }
 }
