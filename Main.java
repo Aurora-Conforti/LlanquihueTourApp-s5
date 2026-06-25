@@ -1,114 +1,133 @@
-package model;
+package app;
+
+import model.Tour;
+import service.GestorTours;
+
+import java.util.ArrayList;
+import java.util.Scanner;
 
 /**
- * Clase que representa al operador turistico local encargado de ejecutar un tour.
- * Llanquihue Tour trabaja junto a operadores locales, guias y proveedores de
- * transporte, por lo que cada Tour necesita estar asociado a un operador.
- *
- * Esta clase se utiliza en una relacion de composicion dentro de la clase Tour:
- * un Tour no puede existir sin tener asignado un OperadorTuristico responsable.
+ * Clase principal del sistema de gestion de tours de Llanquihue Tour.
+ * Carga los datos desde el archivo tours.txt a traves de GestorTours,
+ * muestra el catalogo completo, aplica filtros automaticos y permite
+ * al usuario realizar una busqueda interactiva por nombre desde la consola.
  *
  * @author Aurora Conforti
- * @version 1.0
+ * @version 2.0
  */
-public class OperadorTuristico {
+public class Main {
 
-    // ─────────────────────────────────────────────
-    // Atributos privados (encapsulamiento)
-    // ─────────────────────────────────────────────
+    public static void main(String[] args) {
 
-    /** Nombre del operador o guia turistico. */
-    private String nombre;
+        System.out.println("==========================================");
+        System.out.println("   LLANQUIHUE TOUR - Catalogo de Tours");
+        System.out.println("   Agencia de Turismo - Region de Los Lagos");
+        System.out.println("==========================================");
+        System.out.println();
 
-    /** Especialidad del operador: gastronomico, lacustre, cultural, aventura. */
-    private String especialidad;
+        // ─────────────────────────────────────────
+        // Paso 1: Cargar datos desde el archivo TXT
+        // ─────────────────────────────────────────
+        GestorTours gestor = new GestorTours("resources/tours.txt");
+        ArrayList<Tour> listaTours = gestor.cargarTours();
 
-    /** Telefono de contacto del operador. */
-    private String telefonoContacto;
+        System.out.println("Total de tours cargados: " + listaTours.size());
+        System.out.println();
 
-    /** Anios de experiencia del operador en la zona. */
-    private int aniosExperiencia;
+        if (listaTours.isEmpty()) {
+            System.out.println("No hay tours disponibles. Revise el archivo de datos.");
+            return;
+        }
 
-    // ─────────────────────────────────────────────
-    // Constructor sin parametros
-    // ─────────────────────────────────────────────
+        // ─────────────────────────────────────────
+        // Paso 2: Mostrar todos los tours
+        // ─────────────────────────────────────────
+        System.out.println("==========================================");
+        System.out.println("   TODOS LOS TOURS DISPONIBLES");
+        System.out.println("==========================================");
+        mostrarListado(listaTours);
 
-    /**
-     * Constructor por defecto con valores predeterminados.
-     */
-    public OperadorTuristico() {
-        this.nombre           = "Sin asignar";
-        this.especialidad     = "General";
-        this.telefonoContacto = "Sin contacto";
-        this.aniosExperiencia = 0;
+        // ─────────────────────────────────────────
+        // Paso 3: Filtrar tours GASTRONOMICOS
+        // ─────────────────────────────────────────
+        System.out.println();
+        System.out.println("==========================================");
+        System.out.println("   FILTRO: TOURS GASTRONOMICOS");
+        System.out.println("==========================================");
+        ArrayList<Tour> toursGastronomicos = gestor.filtrarPorTipo("gastronomico");
+        mostrarListadoOMensajeVacio(toursGastronomicos, "No se encontraron tours gastronomicos.");
+
+        // ─────────────────────────────────────────
+        // Paso 4: Filtrar tours con precio menor a $40.000
+        // ─────────────────────────────────────────
+        System.out.println();
+        System.out.println("==========================================");
+        System.out.println("   FILTRO: TOURS CON PRECIO MENOR A $40.000");
+        System.out.println("==========================================");
+        ArrayList<Tour> toursEconomicos = gestor.filtrarPorPrecioMenorA(40000);
+        mostrarListadoOMensajeVacio(toursEconomicos, "No se encontraron tours en ese rango de precio.");
+
+        // ─────────────────────────────────────────
+        // Paso 5: Filtrar tours con cupos disponibles mayores a 5
+        // ─────────────────────────────────────────
+        System.out.println();
+        System.out.println("==========================================");
+        System.out.println("   FILTRO: TOURS CON MAS DE 5 CUPOS");
+        System.out.println("==========================================");
+        ArrayList<Tour> toursConCupos = gestor.filtrarPorCuposMayorA(5);
+        mostrarListadoOMensajeVacio(toursConCupos, "No se encontraron tours con cupos disponibles.");
+
+        // ─────────────────────────────────────────
+        // Paso 6: Busqueda interactiva por nombre
+        // ─────────────────────────────────────────
+        System.out.println();
+        System.out.println("==========================================");
+        System.out.println("   BUSQUEDA INTERACTIVA POR NOMBRE");
+        System.out.println("==========================================");
+
+        Scanner teclado = new Scanner(System.in);
+        System.out.print("Ingrese una palabra clave para buscar un tour (o presione Enter para omitir): ");
+
+        try {
+            String busqueda = teclado.nextLine();
+
+            if (busqueda != null && !busqueda.trim().isEmpty()) {
+                ArrayList<Tour> resultados = gestor.buscarPorNombre(busqueda);
+                mostrarListadoOMensajeVacio(resultados,
+                        "No se encontraron tours que coincidan con '" + busqueda + "'.");
+            } else {
+                System.out.println("Busqueda omitida por el usuario.");
+            }
+        } catch (Exception e) {
+            System.out.println("Ocurrio un error al leer la busqueda: " + e.getMessage());
+        } finally {
+            teclado.close();
+        }
+
+        System.out.println();
+        System.out.println("==========================================");
+        System.out.println("   Fin del catalogo - Llanquihue Tour");
+        System.out.println("==========================================");
     }
 
     // ─────────────────────────────────────────────
-    // Constructor con parametros
+    // Metodos auxiliares de presentacion por consola
     // ─────────────────────────────────────────────
 
-    /**
-     * Constructor con parametros para inicializar todos los atributos del operador.
-     *
-     * @param nombre           Nombre del operador.
-     * @param especialidad     Especialidad turistica del operador.
-     * @param telefonoContacto Telefono de contacto.
-     * @param aniosExperiencia Anios de experiencia en la zona.
-     */
-    public OperadorTuristico(String nombre, String especialidad,
-                              String telefonoContacto, int aniosExperiencia) {
-        this.nombre           = nombre;
-        this.especialidad     = especialidad;
-        this.telefonoContacto = telefonoContacto;
-        this.aniosExperiencia = aniosExperiencia;
+    private static void mostrarListado(ArrayList<Tour> tours) {
+        for (int i = 0; i < tours.size(); i++) {
+            System.out.println("Tour #" + (i + 1));
+            System.out.println(tours.get(i).toString());
+            System.out.println("------------------------------------------");
+        }
     }
 
-    // ─────────────────────────────────────────────
-    // Getters
-    // ─────────────────────────────────────────────
-
-    /** @return nombre del operador. */
-    public String getNombre() { return nombre; }
-
-    /** @return especialidad del operador. */
-    public String getEspecialidad() { return especialidad; }
-
-    /** @return telefono de contacto del operador. */
-    public String getTelefonoContacto() { return telefonoContacto; }
-
-    /** @return anios de experiencia del operador. */
-    public int getAniosExperiencia() { return aniosExperiencia; }
-
-    // ─────────────────────────────────────────────
-    // Setters
-    // ─────────────────────────────────────────────
-
-    /** @param nombre Nombre a asignar. */
-    public void setNombre(String nombre) { this.nombre = nombre; }
-
-    /** @param especialidad Especialidad a asignar. */
-    public void setEspecialidad(String especialidad) { this.especialidad = especialidad; }
-
-    /** @param telefonoContacto Telefono a asignar. */
-    public void setTelefonoContacto(String telefonoContacto) {
-        this.telefonoContacto = telefonoContacto;
-    }
-
-    /** @param aniosExperiencia Anios de experiencia a asignar. */
-    public void setAniosExperiencia(int aniosExperiencia) {
-        this.aniosExperiencia = aniosExperiencia;
-    }
-
-    // ─────────────────────────────────────────────
-    // toString
-    // ─────────────────────────────────────────────
-
-    /**
-     * Retorna una representacion legible del operador turistico.
-     * @return String con los datos del operador.
-     */
-    @Override
-    public String toString() {
-        return nombre + " (" + especialidad + ", " + aniosExperiencia + " anios exp., " + telefonoContacto + ")";
+    private static void mostrarListadoOMensajeVacio(ArrayList<Tour> tours, String mensajeSiVacio) {
+        if (tours.isEmpty()) {
+            System.out.println("  " + mensajeSiVacio);
+        } else {
+            mostrarListado(tours);
+            System.out.println("Total encontrados: " + tours.size());
+        }
     }
 }
