@@ -1,158 +1,157 @@
-package model;
+package service;
+
+import model.OperadorTuristico;
+import model.Tour;
+import util.ValidadorDatos;
+
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 
 /**
- * Clase que representa un tour ofrecido por la agencia Llanquihue Tour.
- * Contiene los datos principales del tour: nombre, tipo, precio y cupos disponibles.
- *
- * Aplica una relacion de composicion con la clase OperadorTuristico: cada Tour
- * tiene asignado un operador responsable de ejecutarlo, reflejando la red de
- * colaboracion real entre la agencia y los operadores locales de la zona.
+ * Clase de servicio encargada de cargar los tours desde el archivo
+ * tours.txt, validar los datos y ofrecer operaciones de filtrado
+ * y busqueda sobre el catalogo.
  *
  * @author Aurora Conforti
- * @version 2.0
+ * @version 1.0
  */
-public class Tour {
+public class GestorTours {
 
-    // ─────────────────────────────────────────────
-    // Atributos privados (encapsulamiento)
-    // ─────────────────────────────────────────────
+    private String rutaArchivo;
+    private ArrayList<Tour> tours;
 
-    /** Nombre descriptivo del tour. */
-    private String nombre;
+    // ─────────────────────────────────────────
+    // Constructores
+    // ─────────────────────────────────────────
 
-    /** Tipo de tour: gastronomico, lacustre, cultural, aventura, etc. */
-    private String tipo;
-
-    /** Precio del tour en pesos chilenos. */
-    private int precio;
-
-    /** Cantidad de cupos disponibles para el tour. */
-    private int cuposDisponibles;
-
-    /**
-     * Operador turistico responsable de ejecutar el tour.
-     * Relacion de composicion: un Tour siempre tiene un OperadorTuristico asociado.
-     */
-    private OperadorTuristico operador;
-
-    // ─────────────────────────────────────────────
-    // Constructor sin parametros
-    // ─────────────────────────────────────────────
-
-    /**
-     * Constructor por defecto con valores predeterminados.
-     * El operador se inicializa con sus valores por defecto.
-     */
-    public Tour() {
-        this.nombre           = "Sin nombre";
-        this.tipo             = "Sin tipo";
-        this.precio           = 0;
-        this.cuposDisponibles = 0;
-        this.operador         = new OperadorTuristico();
+    public GestorTours(String rutaArchivo) {
+        this.rutaArchivo = rutaArchivo;
+        this.tours = new ArrayList<>();
     }
 
-    // ─────────────────────────────────────────────
-    // Constructor con parametros
-    // ─────────────────────────────────────────────
+    // ─────────────────────────────────────────
+    // Carga de datos
+    // ─────────────────────────────────────────
 
     /**
-     * Constructor con parametros para inicializar todos los atributos del tour,
-     * incluyendo el operador turistico asociado.
+     * Carga los tours desde el archivo TXT.
+     * Formato esperado: nombre;tipo;precio;cupos;nombreOperador;especialidadOperador
      *
-     * @param nombre           Nombre del tour.
-     * @param tipo             Tipo de tour.
-     * @param precio           Precio en pesos chilenos.
-     * @param cuposDisponibles Cupos disponibles.
-     * @param operador         Operador turistico responsable del tour.
+     * @return Lista de tours cargados correctamente.
      */
-    public Tour(String nombre, String tipo, int precio, int cuposDisponibles,
-                OperadorTuristico operador) {
-        this.nombre           = nombre;
-        this.tipo             = tipo;
-        this.precio           = precio;
-        this.cuposDisponibles = cuposDisponibles;
-        this.operador         = operador;
+    public ArrayList<Tour> cargarTours() {
+        tours.clear();
+        try (BufferedReader br = new BufferedReader(new FileReader(rutaArchivo))) {
+            String linea;
+            int numeroLinea = 0;
+            while ((linea = br.readLine()) != null) {
+                numeroLinea++;
+                procesarLinea(linea, numeroLinea);
+            }
+        } catch (IOException e) {
+            System.out.println("Error al leer el archivo: " + e.getMessage());
+        }
+        return tours;
     }
 
-    // ─────────────────────────────────────────────
-    // Getters
-    // ─────────────────────────────────────────────
-
-    /** @return nombre del tour. */
-    public String getNombre() { return nombre; }
-
-    /** @return tipo del tour. */
-    public String getTipo() { return tipo; }
-
-    /** @return precio del tour. */
-    public int getPrecio() { return precio; }
-
-    /** @return cupos disponibles del tour. */
-    public int getCuposDisponibles() { return cuposDisponibles; }
-
-    /** @return operador turistico asociado al tour. */
-    public OperadorTuristico getOperador() { return operador; }
-
-    // ─────────────────────────────────────────────
-    // Setters
-    // ─────────────────────────────────────────────
-
-    /** @param nombre Nombre a asignar. */
-    public void setNombre(String nombre) { this.nombre = nombre; }
-
-    /** @param tipo Tipo a asignar. */
-    public void setTipo(String tipo) { this.tipo = tipo; }
-
     /**
-     * Establece el precio del tour, validando que sea un valor positivo.
-     * @param precio Precio a asignar.
+     * Procesa una linea individual del archivo, validando su formato
+     * y los datos contenidos antes de crear el objeto Tour.
      */
-    public void setPrecio(int precio) {
+    private void procesarLinea(String linea, int numeroLinea) {
+        if (!ValidadorDatos.formatoLineaCorrecto(linea, 6)) {
+            System.out.println("Linea " + numeroLinea + " ignorada: formato incorrecto.");
+            return;
+        }
+
+        String[] datos = linea.split(";");
         try {
-            if (precio < 0) {
-                throw new IllegalArgumentException("El precio no puede ser negativo.");
+            String nombre = datos[0].trim();
+            String tipo = datos[1].trim();
+            double precio = Double.parseDouble(datos[2].trim());
+            int cupos = Integer.parseInt(datos[3].trim());
+            String nombreOperador = datos[4].trim();
+            String especialidad = datos[5].trim();
+
+            if (!ValidadorDatos.esTextoValido(nombre)
+                    || !ValidadorDatos.esTextoValido(tipo)
+                    || !ValidadorDatos.esNumeroPositivo(precio)
+                    || !ValidadorDatos.esEnteroPositivo(cupos)
+                    || !ValidadorDatos.esTextoValido(nombreOperador)) {
+                System.out.println("Linea " + numeroLinea + " ignorada: datos invalidos.");
+                return;
             }
-            this.precio = precio;
-        } catch (IllegalArgumentException e) {
-            System.out.println("Error al asignar precio: " + e.getMessage());
-            this.precio = 0;
+
+            OperadorTuristico operador = new OperadorTuristico(nombreOperador, especialidad);
+            Tour tour = new Tour(nombre, tipo, precio, cupos, operador);
+            tours.add(tour);
+
+        } catch (NumberFormatException e) {
+            System.out.println("Linea " + numeroLinea + " ignorada: error en formato numerico.");
         }
     }
 
+    // ─────────────────────────────────────────
+    // Metodos de filtrado
+    // ─────────────────────────────────────────
+
     /**
-     * Establece los cupos disponibles del tour, validando que sea un valor positivo.
-     * @param cuposDisponibles Cupos a asignar.
+     * Filtra los tours por tipo (sin distinguir mayusculas).
      */
-    public void setCuposDisponibles(int cuposDisponibles) {
-        try {
-            if (cuposDisponibles < 0) {
-                throw new IllegalArgumentException("Los cupos no pueden ser negativos.");
+    public ArrayList<Tour> filtrarPorTipo(String tipo) {
+        ArrayList<Tour> resultado = new ArrayList<>();
+        for (Tour tour : tours) {
+            if (tour.getTipo().equalsIgnoreCase(tipo)) {
+                resultado.add(tour);
             }
-            this.cuposDisponibles = cuposDisponibles;
-        } catch (IllegalArgumentException e) {
-            System.out.println("Error al asignar cupos: " + e.getMessage());
-            this.cuposDisponibles = 0;
         }
+        return resultado;
     }
 
-    /** @param operador Operador turistico a asignar. */
-    public void setOperador(OperadorTuristico operador) { this.operador = operador; }
-
-    // ─────────────────────────────────────────────
-    // toString
-    // ─────────────────────────────────────────────
+    /**
+     * Filtra los tours con precio menor al valor indicado.
+     */
+    public ArrayList<Tour> filtrarPorPrecioMenorA(double precioMaximo) {
+        ArrayList<Tour> resultado = new ArrayList<>();
+        for (Tour tour : tours) {
+            if (tour.getPrecio() < precioMaximo) {
+                resultado.add(tour);
+            }
+        }
+        return resultado;
+    }
 
     /**
-     * Retorna una representacion legible del tour, incluyendo los datos
-     * del operador turistico asociado (relacion de composicion).
-     * @return String con los datos del tour.
+     * Filtra los tours con cupos disponibles mayores al valor indicado.
      */
-    @Override
-    public String toString() {
-        return "  Nombre   : " + nombre +
-               "\n  Tipo     : " + tipo +
-               "\n  Precio   : $" + String.format("%,d", precio) +
-               "\n  Cupos    : " + cuposDisponibles +
-               "\n  Operador : " + operador.toString();
+    public ArrayList<Tour> filtrarPorCuposMayorA(int cuposMinimos) {
+        ArrayList<Tour> resultado = new ArrayList<>();
+        for (Tour tour : tours) {
+            if (tour.getCuposDisponibles() > cuposMinimos) {
+                resultado.add(tour);
+            }
+        }
+        return resultado;
+    }
+
+    // ─────────────────────────────────────────
+    // Metodos de busqueda
+    // ─────────────────────────────────────────
+
+    /**
+     * Busca tours cuyo nombre contenga la palabra clave
+     * (sin distinguir mayusculas).
+     */
+    public ArrayList<Tour> buscarPorNombre(String palabraClave) {
+        ArrayList<Tour> resultado = new ArrayList<>();
+        String clave = palabraClave.toLowerCase();
+        for (Tour tour : tours) {
+            if (tour.getNombre().toLowerCase().contains(clave)) {
+                resultado.add(tour);
+            }
+        }
+        return resultado;
     }
 }
